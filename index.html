@@ -38,8 +38,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offs
 .hr{width:238px;flex:none;text-align:right}.invoice-logo{width:72px;height:72px;object-fit:contain;display:block;margin:0 0 3px auto}.hr h2{margin:0 0 6px;font-size:23px;letter-spacing:.12em;font-weight:800;color:#111c33!important}
 .hr .m{font-size:12px;font-weight:600;color:#1e293b!important;line-height:1.7}.hr .m b{color:#0f172a!important}
 .line{height:3px;background:#f97316;margin:14px 0 18px}
-.bs{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:20px;border:1.5px solid #334155;border-radius:8px;overflow:hidden}
-.bx{padding:13px 15px;min-height:106px}.bx+.bx{border-left:1.5px solid #334155}
+.bs{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:0 0 auto;margin-bottom:20px;border:1.5px solid #334155;border-radius:8px;overflow:hidden}
+.bx{padding:13px 15px;min-height:132px}.bx+.bx{border-left:1.5px solid #334155}.bx .ad{font-size:12.5px;line-height:1.5;color:#64748b!important}.bx .gs{font-size:12.5px}
 .bx h4{margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ea580c!important}
 .bx .nm{font-size:14px;font-weight:700;color:#111c33!important;margin-bottom:3px}.bx div{font-size:12.5px;color:#64748b!important}.bx .gs{margin-top:5px;color:#475569!important}.bx .gs b{color:#334155!important}
 table.it{width:100%;border-collapse:collapse;border:1.5px solid #526273}
@@ -108,7 +108,7 @@ function dec(h){h=h.replace(/-/g,'+').replace(/_/g,'/');const o=JSON.parse(decod
 function itemUnit(i){if(i.unit==='Qty')return i.qtyUnit||'MT';return i.unit==='Days'?'Day':i.unit}
 function rateUnit(i){return itemUnit(i)==='Hours'?'Hour':itemUnit(i)}
 function tableUnit(i){return i.unit==='Days'?'Day':i.unit}
-function party(t,p){return`<div class="bx"><h4>${t}</h4><div class="nm">${esc(p.n)||'&nbsp;'}</div><div>${nl(p.a)}</div>${p.g?`<div class="gs"><b>GSTIN:</b> ${esc(p.g)}</div>`:''}</div>`}
+function party(t,p){return`<div class="bx"><h4>${t}</h4><div class="nm">${esc(p.n)||'&nbsp;'}</div><div class="ad">${nl(p.a)}</div>${p.g?`<div class="gs"><b>GSTIN:</b> ${esc(p.g)}</div>`:''}</div>`}
 function render(){
  const units=[...new Set(S.items.map(tableUnit))];const u=units.length===1?units[0]:null;
  const hq=u?`No. ${u}`:'Qty',hr=u?`Rate per ${u==='Hours'?'Hour':u}`:'Rate';
