@@ -76,7 +76,7 @@ body.view .edit{display:none}body.view .wrap{display:block;max-width:860px}
  <div class="panel"><h3>Bill To</h3><label class="party-label">Name</label><input id="bn"><label class="party-label">Site Name (Optional)</label><input id="bs" placeholder="Leave blank if not applicable"><label class="party-label">Address</label><textarea id="ba"></textarea><label class="party-label">GSTIN (Optional)</label><input id="bg" placeholder="Leave blank if not applicable"></div>
  <div class="panel"><h3>Ship To</h3><div class="chk"><input type="checkbox" id="same" checked><span>Same as Bill To</span></div>
   <div id="shipf" class="hide"><label class="party-label">Name</label><input id="sn"><label class="party-label">Site Name (Optional)</label><input id="ss" placeholder="Leave blank if not applicable"><label class="party-label">Address</label><textarea id="sa"></textarea><label class="party-label">GSTIN (Optional)</label><input id="sg" placeholder="Leave blank if not applicable"></div></div>
- <div class="panel"><h3>Items</h3><div class="chk"><input type="checkbox" id="supplyColumn"><span>Include Supply Date Column (Optional)</span></div><div id="items"></div><datalist id="hsn-options"><option value="2517">M-Sand</option><option value="2523">Cement</option><option value="6904">Bricks</option><option value="7214">TMT Steel</option><option value="9966">Tipper</option><option value="9973">Excavator</option></datalist><button class="btn" id="add">+ Add Item</button></div>
+ <div class="panel"><h3>Items</h3><div id="items"></div><datalist id="hsn-options"><option value="2517">M-Sand</option><option value="2523">Cement</option><option value="6904">Bricks</option><option value="7214">TMT Steel</option><option value="9966">Tipper</option><option value="9973">Excavator</option></datalist><button class="btn" id="add">+ Add Item</button></div>
  <div class="panel"><h3>GST</h3><div class="r2"><div><label>ADD. CGST</label><select id="cg"><option value="2.5">2.5%</option><option value="6">6%</option><option value="9" selected>9%</option></select></div><div><label>ADD. SGST</label><select id="sgs"><option value="2.5">2.5%</option><option value="6">6%</option><option value="9" selected>9%</option></select></div></div></div>
 </div>
 <div class="stage" id="stage"><div id="fit"><div id="invoice"></div></div></div>
@@ -97,28 +97,29 @@ function inrWords(x){x=Math.round(x*100);const R=Math.floor(x/100),P=x%100;let s
 const today=()=>new Date().toISOString().slice(0,10);
 const dmy=d=>d?d.split('-').reverse().join('-'):'';
 const blank=()=>({supplyDate:'',desc:'',hsn:'',qty:1,unit:'Day',qtyUnit:'MT',customUnit:'',rate:0});
-let S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],showSupplyDate:false,cg:9,sg:9};
+let S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],cg:9,sg:9};
 const BANK=[['Bank','INDIAN BANK'],['Branch','VALARPURAM'],['A/C No','807860551'],['IFSC','IDIB000V060']];
 const viewMode=/[#&]v=/.test(location.hash);
-function enc(){const o={n:S.no,x:S.serialNo,d:S.date,b:[S.b.n,S.b.a,S.b.g,S.b.site],s:S.same?0:[S.s.n,S.s.a,S.s.g,S.s.site],i:S.items.map(i=>[i.desc,i.hsn,i.qty,i.unit,i.rate,i.qtyUnit,i.supplyDate,i.customUnit]),q:S.showSupplyDate?1:0,c:S.cg,g:S.sg};
+function enc(){const o={n:S.no,x:S.serialNo,d:S.date,b:[S.b.n,S.b.a,S.b.g,S.b.site],s:S.same?0:[S.s.n,S.s.a,S.s.g,S.s.site],i:S.items.map(i=>[i.desc,i.hsn,i.qty,i.unit,i.rate,i.qtyUnit,i.supplyDate,i.customUnit]),c:S.cg,g:S.sg};
  return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function dec(h){h=h.replace(/-/g,'+').replace(/_/g,'/');const o=JSON.parse(decodeURIComponent(escape(atob(h))));
- return{no:o.n||'',serialNo:o.x||'',date:o.d,b:{n:o.b[0],a:o.b[1],g:o.b[2],site:o.b[3]||''},same:!o.s,s:o.s?{n:o.s[0],a:o.s[1],g:o.s[2],site:o.s[3]||''}:{n:'',site:'',a:'',g:''},items:o.i.map(a=>({desc:a[0],hsn:a[1],qty:a[2],unit:a[3]==='Self Enterable'?'Qty':a[3],rate:a[4],qtyUnit:a[3]==='Self Enterable'?'Custom':(a[5]||'MT'),supplyDate:a[6]||o.d||'',customUnit:a[7]||''})),showSupplyDate:o.q===undefined?true:!!o.q,cg:o.c,sg:o.g}}
+ return{no:o.n||'',serialNo:o.x||'',date:o.d,b:{n:o.b[0],a:o.b[1],g:o.b[2],site:o.b[3]||''},same:!o.s,s:o.s?{n:o.s[0],a:o.s[1],g:o.s[2],site:o.s[3]||''}:{n:'',site:'',a:'',g:''},items:o.i.map(a=>({desc:a[0],hsn:a[1],qty:a[2],unit:a[3]==='Self Enterable'?'Qty':a[3],rate:a[4],qtyUnit:a[3]==='Self Enterable'?'Custom':(a[5]||'MT'),supplyDate:a[6]||'',customUnit:a[7]||''})),cg:o.c,sg:o.g}}
 function itemUnit(i){if(i.unit==='Qty')return i.qtyUnit==='Custom'?(i.customUnit||'Unit'):(i.qtyUnit||'MT');return i.unit==='Days'?'Day':i.unit}
 function rateUnit(i){return itemUnit(i)==='Hours'?'Hour':itemUnit(i)}
 function tableUnit(i){return i.unit==='Days'?'Day':i.unit}
 function party(t,p){return`<div class="bx"><h4>${t}</h4><div class="nm">${esc(p.n)||'&nbsp;'}</div><div class="ad">${nl(p.a)}</div>${p.g?`<div class="gs"><b>GSTIN:</b> ${esc(p.g)}</div>`:''}${p.site?`<div class="site"><b>Site Name:</b><span>${esc(p.site)}</span></div>`:''}</div>`}
 function render(){
  const units=[...new Set(S.items.map(tableUnit))];const u=units.length===1?units[0]:null;
+ const showSupplyDate=S.items.some(i=>i.supplyDate);
  const hq=u?`No. ${u}`:'Qty';
  let sub=0;const rows=S.items.map((i,k)=>{const a=Math.round((+i.qty||0)*(+i.rate||0)*100)/100;sub+=a;
-  return`<tr><td class="c">${k+1}</td>${S.showSupplyDate?`<td class="date">${dmy(i.supplyDate)}</td>`:''}<td class="c">${nl(i.desc)}</td><td class="c">${esc(i.hsn)}</td><td class="c">${+i.qty||0} ${itemUnit(i)}</td><td class="r">${fmt(+i.rate||0)}</td><td class="r">${fmt(a)}</td></tr>`}).join('');
+  return`<tr><td class="c">${k+1}</td>${showSupplyDate?`<td class="date">${dmy(i.supplyDate)}</td>`:''}<td class="c">${nl(i.desc)}</td><td class="c">${esc(i.hsn)}</td><td class="c">${+i.qty||0} ${itemUnit(i)}</td><td class="r">${fmt(+i.rate||0)}</td><td class="r">${fmt(a)}</td></tr>`}).join('');
  const c=Math.round(sub*S.cg)/100,g=Math.round(sub*S.sg)/100,gt=Math.round((sub+c+g)*100)/100,sh=S.same?S.b:S.s;
  $('invoice').innerHTML=`<div class="hd"><div class="hl"><div class="co"><h1>M S YOGESH SUPPLY</h1><div>No.56, Bharathidasan street,<br>Valarpuram Village,<br>Kancheepuram District-602605.</div><div><b>GSTIN:</b> 33BYKPS9635L2ZL<br><b>Mobile:</b> 8883226008<br><b>Email:</b> yogeshram1969@gmail.com</div></div></div>
  <div class="hr"><img class="invoice-logo" src="${LOGO}" alt="M S Yogesh Supply logo"><h2>TAX INVOICE</h2><div class="m">${S.no?`<b>INVOICE NO:</b> ${esc(S.no)}<br>`:''}${S.serialNo?`<b>SERIAL NO:</b> ${esc(S.serialNo)}<br>`:''}<b>DATE:</b> ${dmy(S.date)}</div></div></div>
  <div class="line"></div>
  <div class="bs">${party('Bill To',S.b)}${party('Ship To',sh)}</div>
- <table class="it"><thead><tr><th style="width:42px">S.No.</th>${S.showSupplyDate?'<th style="width:75px">Supply Date</th>':''}<th>Particulars</th><th style="width:72px">HSN/SAC</th><th style="width:74px">${hq}</th><th style="width:90px">Rate per (₹)</th><th style="width:94px">Amount (₹)</th></tr></thead><tbody>${rows}<tr><td class="aw" colspan="${S.showSupplyDate?4:3}" rowspan="4"><small>AMOUNT IN WORDS</small><p>${inrWords(gt)}</p></td><td class="lb" colspan="2">TOTAL</td><td class="r">₹${fmt(sub)}</td></tr><tr><td class="lb" colspan="2">ADD. CGST ${S.cg}%</td><td class="r">₹${fmt(c)}</td></tr><tr><td class="lb" colspan="2">ADD. SGST ${S.sg}%</td><td class="r">₹${fmt(g)}</td></tr><tr class="gt"><td colspan="2">GRAND TOTAL</td><td class="r">₹${fmt(gt)}</td></tr></tbody></table>
+ <table class="it"><thead><tr><th style="width:42px">S.No.</th>${showSupplyDate?'<th style="width:75px">Supply Date</th>':''}<th>Particulars</th><th style="width:72px">HSN/SAC</th><th style="width:74px">${hq}</th><th style="width:90px">Rate per (₹)</th><th style="width:94px">Amount (₹)</th></tr></thead><tbody>${rows}<tr><td class="aw" colspan="${showSupplyDate?4:3}" rowspan="4"><small>AMOUNT IN WORDS</small><p>${inrWords(gt)}</p></td><td class="lb" colspan="2">TOTAL</td><td class="r">₹${fmt(sub)}</td></tr><tr><td class="lb" colspan="2">ADD. CGST ${S.cg}%</td><td class="r">₹${fmt(c)}</td></tr><tr><td class="lb" colspan="2">ADD. SGST ${S.sg}%</td><td class="r">₹${fmt(g)}</td></tr><tr class="gt"><td colspan="2">GRAND TOTAL</td><td class="r">₹${fmt(gt)}</td></tr></tbody></table>
  <div class="sp2"></div>
  <div class="ft"><div class="bk"><h4>ACCOUNT DETAILS</h4>${BANK.map(r=>`<div><b>${r[0]}:</b> ${r[1]}</div>`).join('')}</div>
  <div class="sg"><div class="sl"></div><i>Authorized Signature / Seal</i><b>For M S YOGESH SUPPLY</b></div></div>
@@ -131,25 +132,24 @@ addEventListener('resize',fit);
 function pdf(){const f=$('fit'),t=f.style.transform;f.style.transform='none';const inv=$('invoice');inv.style.boxShadow='none';
  html2pdf().set({margin:0,filename:`Invoice-${(S.no||'').replace(/[^\w-]/g,'')}-M-S-Yogesh-Supply.pdf`,image:{type:'jpeg',quality:.86},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0,logging:false},jsPDF:{unit:'px',format:[794,1120],hotfixes:['px_scaling'],compress:true}}).from(inv).save().then(()=>{inv.style.boxShadow='';f.style.transform=t;fit()})}
 function edItems(){$('items').innerHTML=S.items.map((it,k)=>{const qty=it.unit==='Qty',custom=qty&&it.qtyUnit==='Custom';return`<div class="item">${S.items.length>1?`<button class="x" data-k="${k}">×</button>`:''}
- ${S.showSupplyDate?`<div class="r2"><div><label>Supply Date</label><input type="date" data-k="${k}" data-f="supplyDate" value="${esc(it.supplyDate)}"></div><div><label>Particulars</label><input data-k="${k}" data-f="desc" value="${esc(it.desc)}"></div></div>`:`<label>Particulars</label><input data-k="${k}" data-f="desc" value="${esc(it.desc)}">`}
+ <div class="r2"><div><label>Supply Date (Optional)</label><input type="date" data-k="${k}" data-f="supplyDate" value="${esc(it.supplyDate)}"></div><div><label>Particulars</label><input data-k="${k}" data-f="desc" value="${esc(it.desc)}"></div></div>
  <div class="r2"><div><label>HSN/SAC</label><input list="hsn-options" data-k="${k}" data-f="hsn" value="${esc(it.hsn)}" placeholder="Choose or enter code"></div><div><label>Unit Type</label><select data-k="${k}" data-f="unit"><option value="Day" ${itemUnit(it)==='Day'?'selected':''}>Day</option><option value="Hours" ${it.unit==='Hours'?'selected':''}>Hours</option><option value="Qty" ${qty?'selected':''}>Qty</option><option value="Trip" ${it.unit==='Trip'?'selected':''}>Trip</option><option value="Load" ${it.unit==='Load'?'selected':''}>Load</option></select></div></div>
  ${qty?`<label>Qty Unit</label><select data-k="${k}" data-f="qtyUnit"><option value="MT" ${it.qtyUnit==='MT'?'selected':''}>MT</option><option value="Unit" ${it.qtyUnit==='Unit'?'selected':''}>Unit</option><option value="CFT" ${it.qtyUnit==='CFT'?'selected':''}>CFT</option><option value="Custom" ${it.qtyUnit==='Custom'?'selected':''}>Custom</option></select>`:''}
  ${custom?`<label>Custom Qty Unit</label><input data-k="${k}" data-f="customUnit" value="${esc(it.customUnit)}" placeholder="e.g. Bag, Litre, Km">`:''}
  <div class="r2"><div><label>${qty?'No. Qty':`No. of ${itemUnit(it)}`}</label><input type="number" min="0" step="any" data-k="${k}" data-f="qty" value="${it.qty}"></div><div><label>Rate per (₹)</label><input type="number" min="0" step="any" data-k="${k}" data-f="rate" value="${it.rate}"></div></div></div>`}).join('')}
-function fill(){$('no').value=S.no;$('serialNo').value=S.serialNo;$('dt').value=S.date;$('bn').value=S.b.n;$('bs').value=S.b.site;$('ba').value=S.b.a;$('bg').value=S.b.g;$('same').checked=S.same;$('supplyColumn').checked=S.showSupplyDate;$('shipf').classList.toggle('hide',S.same);
+function fill(){$('no').value=S.no;$('serialNo').value=S.serialNo;$('dt').value=S.date;$('bn').value=S.b.n;$('bs').value=S.b.site;$('ba').value=S.b.a;$('bg').value=S.b.g;$('same').checked=S.same;$('shipf').classList.toggle('hide',S.same);
  $('sn').value=S.s.n;$('ss').value=S.s.site;$('sa').value=S.s.a;$('sg').value=S.s.g;$('cg').value=S.cg;$('sgs').value=S.sg;edItems()}
 function bind(){
  const m={no:v=>S.no=v,serialNo:v=>S.serialNo=v,dt:v=>S.date=v,bn:v=>S.b.n=v,bs:v=>S.b.site=v,ba:v=>S.b.a=v,bg:v=>S.b.g=v.toUpperCase(),sn:v=>S.s.n=v,ss:v=>S.s.site=v,sa:v=>S.s.a=v,sg:v=>S.s.g=v.toUpperCase()};
  for(const id in m)$(id).addEventListener('input',e=>{m[id](e.target.value);render()});
  $('same').onchange=e=>{S.same=e.target.checked;$('shipf').classList.toggle('hide',S.same);render()};
- $('supplyColumn').onchange=e=>{S.showSupplyDate=e.target.checked;edItems();render()};
  $('cg').onchange=e=>{S.cg=+e.target.value;S.sg=S.cg;$('sgs').value=S.sg;render()};
  $('sgs').onchange=e=>{S.sg=+e.target.value;render()};
  $('items').addEventListener('input',e=>{const d=e.target.dataset;if(!d.f)return;S.items[d.k][d.f]=e.target.value;render()});
  $('items').addEventListener('change',e=>{const d=e.target.dataset;if(['unit','qtyUnit'].includes(d.f)){edItems();render()}});
  $('items').addEventListener('click',e=>{if(e.target.dataset.k&&e.target.className==='x'){S.items.splice(+e.target.dataset.k,1);edItems();render()}});
  $('add').onclick=()=>{S.items.push(blank());edItems();render()};
- $('rst').onclick=()=>{S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],showSupplyDate:false,cg:9,sg:9};fill();render()};
+ $('rst').onclick=()=>{S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],cg:9,sg:9};fill();render()};
 }
 $('t1').onclick=()=>{document.body.classList.remove('pv');$('t1').className='on';$('t2').className='';scrollTo(0,0)};
 $('t2').onclick=()=>{document.body.classList.add('pv');$('t2').className='on';$('t1').className='';fit();scrollTo(0,0)};
