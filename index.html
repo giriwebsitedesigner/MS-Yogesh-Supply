@@ -96,10 +96,9 @@ function words(n){if(n===0)return'Zero';let p=[],c=Math.floor(n/1e7),l=Math.floo
 function inrWords(x){x=Math.round(x*100);const R=Math.floor(x/100),P=x%100;let s=words(R)+' Rupees';if(P)s+=' And '+two(P)+' Paise';return s+' Only.'}
 const today=()=>new Date().toISOString().slice(0,10);
 const dmy=d=>d?d.split('-').reverse().join('-'):'';
-const blank=()=>({supplyDate:today(),desc:'',hsn:'',qty:1,unit:'Day',qtyUnit:'MT',customUnit:'',rate:0});
+const blank=()=>({supplyDate:'',desc:'',hsn:'',qty:1,unit:'Day',qtyUnit:'MT',customUnit:'',rate:0});
 let S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],cg:9,sg:9};
 const BANK=[['Bank','INDIAN BANK'],['Branch','VALARPURAM'],['A/C No','807860551'],['IFSC','IDIB000V060']];
-const HSN_NAMES={2517:'M-Sand',2523:'Cement',6904:'Bricks',7214:'TMT Steel',9966:'Tipper',9973:'Excavator'};
 const viewMode=/[#&]v=/.test(location.hash);
 function enc(){const o={n:S.no,x:S.serialNo,d:S.date,b:[S.b.n,S.b.a,S.b.g,S.b.site],s:S.same?0:[S.s.n,S.s.a,S.s.g,S.s.site],i:S.items.map(i=>[i.desc,i.hsn,i.qty,i.unit,i.rate,i.qtyUnit,i.supplyDate,i.customUnit]),c:S.cg,g:S.sg};
  return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -108,7 +107,6 @@ function dec(h){h=h.replace(/-/g,'+').replace(/_/g,'/');const o=JSON.parse(decod
 function itemUnit(i){if(i.unit==='Qty')return i.qtyUnit==='Custom'?(i.customUnit||'Unit'):(i.qtyUnit||'MT');return i.unit==='Days'?'Day':i.unit}
 function rateUnit(i){return itemUnit(i)==='Hours'?'Hour':itemUnit(i)}
 function tableUnit(i){return i.unit==='Days'?'Day':i.unit}
-function hsnName(hsn){return HSN_NAMES[String(hsn).trim()]||''}
 function party(t,p){return`<div class="bx"><h4>${t}</h4><div class="nm">${esc(p.n)||'&nbsp;'}</div><div class="ad">${nl(p.a)}</div>${p.g?`<div class="gs"><b>GSTIN:</b> ${esc(p.g)}</div>`:''}${p.site?`<div class="site"><b>Site Name:</b><span>${esc(p.site)}</span></div>`:''}</div>`}
 function render(){
  const units=[...new Set(S.items.map(tableUnit))];const u=units.length===1?units[0]:null;
@@ -133,7 +131,7 @@ addEventListener('resize',fit);
 function pdf(){const f=$('fit'),t=f.style.transform;f.style.transform='none';const inv=$('invoice');inv.style.boxShadow='none';
  html2pdf().set({margin:0,filename:`Invoice-${(S.no||'').replace(/[^\w-]/g,'')}-M-S-Yogesh-Supply.pdf`,image:{type:'jpeg',quality:.86},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0,logging:false},jsPDF:{unit:'px',format:[794,1120],hotfixes:['px_scaling'],compress:true}}).from(inv).save().then(()=>{inv.style.boxShadow='';f.style.transform=t;fit()})}
 function edItems(){$('items').innerHTML=S.items.map((it,k)=>{const qty=it.unit==='Qty',custom=qty&&it.qtyUnit==='Custom';return`<div class="item">${S.items.length>1?`<button class="x" data-k="${k}">×</button>`:''}
- <div class="r2"><div><label>Supply Date</label><input type="date" data-k="${k}" data-f="supplyDate" value="${esc(it.supplyDate)}"></div><div><label>Particulars</label><input data-k="${k}" data-f="desc" value="${esc(it.desc)}"></div></div>
+ <div class="r2"><div><label>Supply Date (Optional)</label><input type="date" data-k="${k}" data-f="supplyDate" value="${esc(it.supplyDate)}"></div><div><label>Particulars</label><input data-k="${k}" data-f="desc" value="${esc(it.desc)}"></div></div>
  <div class="r2"><div><label>HSN/SAC</label><input list="hsn-options" data-k="${k}" data-f="hsn" value="${esc(it.hsn)}" placeholder="Choose or enter code"></div><div><label>Unit Type</label><select data-k="${k}" data-f="unit"><option value="Day" ${itemUnit(it)==='Day'?'selected':''}>Day</option><option value="Hours" ${it.unit==='Hours'?'selected':''}>Hours</option><option value="Qty" ${qty?'selected':''}>Qty</option><option value="Trip" ${it.unit==='Trip'?'selected':''}>Trip</option><option value="Load" ${it.unit==='Load'?'selected':''}>Load</option></select></div></div>
  ${qty?`<label>Qty Unit</label><select data-k="${k}" data-f="qtyUnit"><option value="MT" ${it.qtyUnit==='MT'?'selected':''}>MT</option><option value="Unit" ${it.qtyUnit==='Unit'?'selected':''}>Unit</option><option value="CFT" ${it.qtyUnit==='CFT'?'selected':''}>CFT</option><option value="Custom" ${it.qtyUnit==='Custom'?'selected':''}>Custom</option></select>`:''}
  ${custom?`<label>Custom Qty Unit</label><input data-k="${k}" data-f="customUnit" value="${esc(it.customUnit)}" placeholder="e.g. Bag, Litre, Km">`:''}
@@ -147,7 +145,7 @@ function bind(){
  $('cg').onchange=e=>{S.cg=+e.target.value;S.sg=S.cg;$('sgs').value=S.sg;render()};
  $('sgs').onchange=e=>{S.sg=+e.target.value;render()};
  $('items').addEventListener('input',e=>{const d=e.target.dataset;if(!d.f)return;S.items[d.k][d.f]=e.target.value;render()});
- $('items').addEventListener('change',e=>{const d=e.target.dataset;if(d.f==='hsn'){const n=hsnName(S.items[d.k].hsn);if(n)S.items[d.k].desc=n}if(['unit','qtyUnit','hsn'].includes(d.f)){edItems();render()}});
+ $('items').addEventListener('change',e=>{const d=e.target.dataset;if(['unit','qtyUnit'].includes(d.f)){edItems();render()}});
  $('items').addEventListener('click',e=>{if(e.target.dataset.k&&e.target.className==='x'){S.items.splice(+e.target.dataset.k,1);edItems();render()}});
  $('add').onclick=()=>{S.items.push(blank());edItems();render()};
  $('rst').onclick=()=>{S={no:'',serialNo:'',date:today(),b:{n:'',site:'',a:'',g:''},same:false,s:{n:'',site:'',a:'',g:''},items:[blank()],cg:9,sg:9};fill();render()};
